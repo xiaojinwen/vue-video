@@ -98,6 +98,7 @@
       closeable
       position="bottom"
       :style="{ height: '55%' }"
+      get-container="#app"
     >
       <!-- <van-sticky> -->
       <div class="comment-num">{{currentVideoComment.commentNum | number}} 条评论</div>
@@ -508,7 +509,7 @@ export default class Home extends Vue {
 @import "./index.scss";
 </style>
 <style lang="scss">
-.video-play {
+.comment-deatil  {
   .van-notice-bar {
     padding: 0;
   }
