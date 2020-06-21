@@ -1,5 +1,7 @@
 <template>
-  <div class="video-play">
+  <div class="video-play" :style="{
+    height: screenHeight + 'px'
+  }">
     <van-swipe
       class="my-swipe"
       indicator-color="white"
@@ -10,23 +12,23 @@
     >
       <van-swipe-item v-for="(videoItem,index) in videoList" :key="index" @click="paly">
         <div class="video-box">
-          <!-- autoplay -->
-          <!-- 视频 -->
+          <!-- 视频 最高缓存三个video -->
+          <!-- :autoplay="videoIndex === index" -->
           <video
-            v-if="videoIndex === index"
-            ref="video"
+            v-if="index>=videoIndex-1 && index<=videoIndex+1"
+            :ref="'video'+index"
             class="video"
-            x5-playsinline
-            x-webkit-airplay="allow"
             preload="auto"
             :poster="videoItem.poster"
             x5-video-orientation="portrait"
             x5-video-player-type="h5"
+            x5-playsinline
+            x-webkit-airplay="allow"
             :x5-video-player-fullscreen="true"
-            :webkit-playsinline="true"
-            :playsinline="true"
+            webkit-playsinline
+            playsinline
             t7-video-player-type="inline"
-            @canplay="onCanPlay"
+            @canplay="onCanPlay($event,index)"
             @ended="onEnded"
             @error="onError"
             @pause="onpause"
@@ -49,15 +51,15 @@
           <!-- 右侧操作按钮 -->
           <div class="controls">
             <div class="like" @click.stop="toLike(videoItem,index)">
-              <div class="like-icon" :class="videoItem.isLike?'islike':''"></div>
+              <span class="iconfont like-icon icon-aixin" :class="videoItem.isLike?'islike':''"></span>
               <div class="like-text">{{videoItem.likeNum | number}}</div>
             </div>
             <div class="comment" @click.stop="toComment(videoItem,index)">
-              <div class="comment-icon"></div>
+              <span class="iconfont comment-icon icon--pinglun"></span>
               <div class="comment-text">{{videoItem.commentNum | number}}</div>
             </div>
             <div class="share" @click.stop="toShare(videoItem,index)">
-              <div class="share-icon"></div>
+              <span class="iconfont share-icon icon-fenxiang"></span>
               <div class="share-text">{{videoItem.shareNum | number}}</div>
             </div>
           </div>
@@ -68,9 +70,8 @@
                 {{videoItem.title}}
               </div>
               <div class="desc">{{videoItem.desc}}</div>
-              <!-- <van-notice-bar wrapable background="#ff000000"
-              color="#ffffff" :scrollable="false">{{videoItem.desc}}</van-notice-bar>-->
               <van-notice-bar
+                :speed="40"
                 class="music"
                 background="#ff000000"
                 color="#ffffff"
@@ -78,8 +79,6 @@
               >{{videoItem.music}}</van-notice-bar>
             </div>
           </div>
-          <!-- 评论详情 -->
-
           <!-- 播放进度条 -->
           <div class="play-progress">
             <div class="inner-play-progress" :style="{width:videoItem.percent}"></div>
@@ -90,21 +89,26 @@
       </van-swipe-item>
     </van-swipe>
 
+    <!-- 评论模块 -->
     <van-popup
       class="comment-deatil"
       v-model="isShowComment"
-      @click-overlay="clickCommentOverlay"
       round
       closeable
       position="bottom"
       :style="{ height: '55%' }"
       get-container="#app"
+      @click-overlay="clickCommentOverlay"
+      @close="onCommentBlur"
     >
-      <!-- <van-sticky> -->
       <div class="comment-num">{{currentVideoComment.commentNum | number}} 条评论</div>
-      <!-- </van-sticky> -->
-
-      <div class="comment-list">
+      <div
+        class="comment-list"
+        v-if="currentVideoComment.list && currentVideoComment.list.length"
+        :style="{
+            paddingBottom: keyboardHeight + 50 +'px'
+          }"
+      >
         <div
           class="comment-item"
           v-for="(commentItem,commentIndex) in currentVideoComment.list"
@@ -116,6 +120,7 @@
               :name="commentItem.fromName"
               :commentValue="commentItem.value"
               :toName="commentItem.toName"
+              @click.native.stop="commentClick(commentItem)"
             ></comment-item>
             <div
               v-if="commentItem.totalChildrenNum && +commentItem.totalChildrenNum"
@@ -139,6 +144,7 @@
                   :name="secondCommentItem.fromName"
                   :commentValue="secondCommentItem.value"
                   :toName="secondCommentItem.toName"
+                  @click.native.stop="commentClick(commentItem,secondCommentItem)"
                 ></comment-item>
               </transition-group>
               <div class="load-more-btn" @click.stop="loadMoreComment(commentItem,commentIndex)">
@@ -157,12 +163,62 @@
           </van-skeleton>
         </div>
       </div>
+      <div class="comment-list-empty" v-else>
+        <div class="text">暂无评论</div>
+      </div>
+
+      <div
+        class="comment-msg"
+        ref="commentMsg"
+        :style="{
+          marginBottom: keyboardHeight + 'px'
+        }"
+      >
+        <van-field
+          ref="commentInput"
+          label-width="0px"
+          v-model="commentMsg"
+          center
+          clearable
+          label
+          :placeholder="commentPlaceholder || '留下你的精彩评论吧'"
+          @focus="onCommentFocus"
+          @blur="onCommentBlur"
+          @keyup.enter="sendClick"
+        >
+          <!-- native -->
+          <template #button>
+            <div class="comment-msg-btn">
+              <div class="comment-msg-btn-item hf-box" @click.stop="hfClick">
+                <span class="iconfont">@</span>
+              </div>
+              <div class="comment-msg-btn-item xl-box" @click.stop="xlClick">
+                <span class="iconfont icon-biaoqing1"></span>
+              </div>
+              <div class="comment-msg-btn-item fs-box" @click.stop="sendClick">
+                <span
+                  class="iconfont icon-fasong"
+                  :class="commentMsg && commentMsg.trim().length?'active':''"
+                ></span>
+              </div>
+            </div>
+          </template>
+        </van-field>
+      </div>
     </van-popup>
   </div>
 </template>
 <script lang="ts">
 import { Component, Prop, Vue, Ref } from "vue-property-decorator";
-
+import { videoList, CommentObjInterface } from "./test-data";
+import { getKeyboardHeight } from "@/utils/index.ts";
+import { Notify } from "vant";
+import { State, Getter, Action, Mutation, namespace } from "vuex-class";
+import { UserInfo } from "@/store/modules/user/states";
+const userModule = namespace("user");
+const ua: any = navigator.userAgent.toLowerCase();
+const isHuaWei = ua.indexOf("huaweibrowser") > -1;
+const isMiui = ua.indexOf("miuibrowser") > -1;
 @Component({
   components: {
     CommentItem: () => import("@/components/comment-item.vue")
@@ -185,147 +241,35 @@ import { Component, Prop, Vue, Ref } from "vue-property-decorator";
   }
 })
 export default class Home extends Vue {
-  private screenWidth: number = 720; // 屏幕宽度 用于计算播放进度条
+  // @loginnModule.State("userInfo") userInfo:UserInfo;
+  @userModule.State("userInfo") userInfo: any;
+  // @loginnModule.Getter getUserInfo;
+  @Prop({
+    type: Number
+  })
+  private screenWidth!: number; // 屏幕宽度 用于计算播放进度条
+  @Prop({
+    type: Number
+  })
+  private screenHeight!: number; // 屏幕高度 用于防止输入法弹出导致页面压缩
+  @Ref() readonly commentInput!: any; // 评论输入框
   private videoIndex: number = 0; // 视频的位置
   private isPlaying: boolean = false; // 是否播放
   private isCanPlay: boolean = false; // 是否能够播放
   private isShowComment: boolean = false; // 是否显示评论详情
-  private videoList: any[] = [
-    {
-      title: "女神带你观看美丽风景",
-      desc:
-        "女神带你观看美丽女神带你观看美丽女神带你观看美丽女神带你观看美丽女神带你观看美丽女神带你观看美丽女神带你观看美丽",
-      music: "何为不可的原创音乐,何为不可的原创音乐,何为不可的原创音乐",
-      soure: [
-        {
-          src:
-            "https://vdse.bdstatic.com//16afebed69a8662dbf125ad0440d3ada.mp4?authorization=bce-auth-v1%2F40f207e648424f47b2e3dfbb1014b1a5%2F2020-04-30T15%3A58%3A26Z%2F-1%2Fhost%2Fd95aefe1ca9b84434f2edaf00042108ed9f133162e515f8ac51407337f2298cf",
-          type: "video/mp4"
-        },
-        {
-          src:
-            "https://v6-dc-ad.ixigua.com/bea75d39536eb9deb5a324a2f6d389b5/5eb0552e/video/tos/hxsy/tos-hxsy-ve-0004/87711438d6f543f58725e05f7d6cee6b/?a=34&br=0&bt=746&cr=0&cs=0&dr=0&ds=1&er=&l=20200505004211010014041159292D00AE&lr=&qs=0&rc=M3JsZW01OXA7dDMzNDczM0ApOGU4N2Y3OmVnN2dpNmg2ZGdnaS5mbmdfYS1fLS1eLS9zc141NWNeYTI0YmE2NTNjXmE6Yw%3D%3D&vl=&vr=",
-          type: "video/ogg"
-        }
-      ],
-      poster:
-        "https://vdgif.bdstatic.com//fcf3f8f68f50283f4c994eaea770c664?x-bce-process=image/resize,m_fill,w_994,h_1766/format,f_jpg/quality,Q_100",
-      likeNum: "6352211",
-      commentNum: "4221",
-      shareNum: "1000",
-      isLike: 1,
-      percent: 0,
-      comment: [
-        {
-          value: "笑死我了,笑死我了,笑6666666666666666666666666666666666",
-          fromName: "笑傲浆糊",
-          fromAvatar: "",
-          totalChildrenNum: 4,
-          isShowMore: 0, // 按钮变成展示更多回复
-          commentId: "1",
-          children: [
-            {
-              value: "我也是",
-              fromName: "小明",
-              commentId: "233"
-            },
-            {
-              value:
-                "我也是,对对对,真有趣,我也是,对对对,真有趣我也是,对对对,真有趣",
-              toName: "雷神",
-              fromName: "小明",
-              commentId: "1334"
-            }
-          ]
-        },
-        {
-          value: "小姐姐跳舞好棒",
-          fromName: "郭德纲",
-          fromAvatar: "",
-          totalChildrenNum: 40,
-          commentId: "2",
-          children: [
-            {
-              value: "真好看",
-              fromName: "留连往返",
-              commentId: "555"
-            },
-            {
-              value: "嗯嗯",
-              toName: "留连往返",
-              fromName: "小黄狗",
-              commentId: "556"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      title: "女神带你观看美丽风景",
-      desc: "看看女神带你观看美丽风景",
-      music:
-        "何为不可的原创音乐,何为不可的原创音乐,何为不可的原创音乐,何为不可的原创音乐,何为不可的原创音乐",
-      soure: [
-        {
-          src:
-            "https://vdse.bdstatic.com//1606aedbd467828758bf43c074a637c5.mp4?authorization=bce-auth-v1%2F40f207e648424f47b2e3dfbb1014b1a5%2F2020-04-30T23%3A39%3A30Z%2F-1%2Fhost%2Fff0bc1c0362881c9da1c0d45e6ca82f09b3850efad6f3085d7ac9a75b213aa74",
-          type: "video/mp4"
-        }
-      ],
-      poster:
-        "https://vdgif.bdstatic.com//c903b4fb9b67982398957e0ffed4593c?x-bce-process=image/resize,m_fill,w_994,h_1766/format,f_jpg/quality,Q_100",
-      likeNum: "635221122",
-      commentNum: "6221",
-      shareNum: "3000",
-      isLike: false,
-      percent: 0,
-      comment: [
-        {
-          value: "笑死我了,笑死我了,笑6666666666666666666666666666666666",
-          fromName: "笑傲浆糊",
-          fromAvatar: "",
-          totalChildrenNum: 4,
-          isShowMore: 0, // 按钮变成展示更多回复
-          children: [
-            {
-              value: "我也是",
-              fromName: "小明"
-            },
-            {
-              value:
-                "我也是,对对对,真有趣,我也是,对对对,真有趣我也是,对对对,真有趣",
-              toName: "雷神",
-              fromName: "小明"
-            }
-          ]
-        },
-        {
-          value: "小姐姐跳舞好棒",
-          fromName: "郭德纲",
-          fromAvatar: "",
-          totalChildrenNum: 40,
-          children: [
-            {
-              value: "真好看",
-              fromName: "留连往返"
-            },
-            {
-              value: "嗯嗯",
-              toName: "留连往返",
-              fromName: "小黄狗"
-            }
-          ]
-        }
-      ]
-    }
-  ]; // 视频数据
-  // @Ref() readonly videoListDom!: any[]
+  private videoList: any[] = videoList; // 视频数据
+
   private currentVideoComment: any = {
     commentNum: "0",
     list: []
   }; // 当前的评论数据
   private commentLoading: boolean = false;
   private currrentCommentLength: number = 0; // 当前点击操作的评论块长度
+  private commentMsg: string = ""; // 评论留言
+  private commentPlaceholder: string = ""; // 评论palceholder
+  private keyboardHeight: number = 0; // 键盘高度
+  private replyCommentObj: any; // 回复评论人的评论对象 comment下的对象
+  private replySecondCommentObj: any; // 二级评论的对象 comment[index].children下的对象
 
   private beforeEnter(el: any): void {
     el.style.opacity = 1;
@@ -348,25 +292,22 @@ export default class Home extends Vue {
     }, delay);
   }
 
-  private swipeChange(index: number): void {
-    console.log("index", index);
-    // 暂停上个视频
-    const videoListDom: any = this.$refs.video;
-    const _index = videoListDom.length > 1 ? this.videoIndex : 0;
-    if (videoListDom && videoListDom[_index]) {
-      if (this.isPlaying) {
-        videoListDom[_index].pause();
-      }
-      // videoListDom[index].play();
-      this.$nextTick(() => {
-        videoListDom[_index].play();
-      });
+  private swipeChange(currentIndex: number): void {
+    console.log("currentIndex", currentIndex);
+    if (this.isPlaying) {
+      // 暂停上个视频
+      const lastVideoDom: any = this.$refs[`video${this.videoIndex}`];
+      lastVideoDom && lastVideoDom[0] && lastVideoDom[0].pause();
     }
-    // 播放下一个
-    this.videoIndex = index;
+    this.$nextTick(() => {
+      // 播放下一个
+      const currentVideoDom: any = this.$refs[`video${currentIndex}`];
+      currentVideoDom && currentVideoDom[0] && currentVideoDom[0].play();
+    });
+    this.videoIndex = currentIndex;
   }
 
-  private onCanPlay(): void {
+  private onCanPlay(event: any, index: number): void {
     console.log("onCanPlay");
     this.isCanPlay = true;
   }
@@ -394,32 +335,23 @@ export default class Home extends Vue {
   }
   // 进度条变化
   private onTimeUpdate(): void {
-    const videoListDom: any = this.$refs.video;
-    const _index = videoListDom.length > 1 ? this.videoIndex : 0;
-    if (videoListDom && videoListDom[_index]) {
-      const videoItem: any = this.videoList[this.videoIndex];
-      const percent: number =
-        videoListDom[_index].currentTime / videoListDom[_index].duration;
-      const percentStr: string = Math.round(percent * this.screenWidth) + "px";
-      if (percentStr !== videoItem.percent) {
-        // videoItem.percent = percentStr;
-        this.$set(videoItem, "percent", percentStr);
-        console.log("percent", percent);
-        console.log("percentStr", percentStr);
-      }
+    const videoListDom: any = this.$refs[`video${this.videoIndex}`];
+    if (!videoListDom || !videoListDom[0]) {
+      return;
+    }
+    const videoItem: any = this.videoList[this.videoIndex];
+    const percent: number =
+      videoListDom[0].currentTime / videoListDom[0].duration;
+    const percentStr: string = Math.round(percent * this.screenWidth) + "px";
+    if (percentStr !== videoItem.percent) {
+      // videoItem.percent = percentStr;
+      this.$set(videoItem, "percent", percentStr);
     }
   }
   public paly(): void {
-    console.log("this.$refs.video", this.$refs.video);
-    console.log("this.videoIndex", this.videoIndex);
-    const videoListDom: any = this.$refs.video;
-    const index = videoListDom.length > 1 ? this.videoIndex : 0;
-    if (videoListDom && videoListDom[index]) {
-      if (this.isPlaying) {
-        videoListDom[index].pause();
-      } else {
-        videoListDom[index].play();
-      }
+    const videoListDom: any = this.$refs[`video${this.videoIndex}`];
+    if (videoListDom && videoListDom[0]) {
+      this.isPlaying ? videoListDom[0].pause() : videoListDom[0].play();
     }
   }
   private toLike(videoItem: any, videoIndex: number): void {
@@ -432,6 +364,7 @@ export default class Home extends Vue {
     // 将数据取出
     this.currentVideoComment.commentNum = videoItem.commentNum || 0;
     this.currentVideoComment.list = videoItem.comment || [];
+    console.log("ua", navigator.userAgent);
   }
   private toShare(videoItem: any, videoIndex: number): void {
     console.log("toShare");
@@ -490,18 +423,128 @@ export default class Home extends Vue {
 
   public playOrPause(type: string): void {
     console.log("playOrPause", type);
-    const videoListDom: any = this.$refs.video;
-    const index = videoListDom.length > 1 ? this.videoIndex : 0;
-    if (videoListDom && videoListDom[index]) {
+    const videoListDom: any = this.$refs[`video${this.videoIndex}`];
+    if (videoListDom && videoListDom[0]) {
       if (type === "play") {
-        videoListDom[index].play();
+        videoListDom[0].play();
       } else if (type === "pause") {
-        videoListDom[index].pause();
+        videoListDom[0].pause();
       }
     }
   }
+  // 评论输入框聚焦
+  private async onCommentFocus(e: any): Promise<any> {
+    console.log("onCommentFocus");
+    try {
+      //  isMiui && (this.keyboardHeight = await getKeyboardHeight(void 0, e));
+      isMiui && (this.keyboardHeight = 74);
+      console.log("this.keyboardHeight", this.keyboardHeight);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  // 评论输入框失焦
+  private onCommentBlur(e: any): void {
+    console.log("onCommentBlur");
+    this.keyboardHeight = 0;
+    if (!this.commentMsg) {
+      this.$nextTick(() => {
+        this.replyCommentObj = void 0;
+        this.replySecondCommentObj = void 0;
+        this.commentPlaceholder = "";
+      });
+    }
+  }
+
+  // 点击评论内容 评论某人
+  private commentClick(commentItem: any, secondCommentItem: any): void {
+    if (!commentItem) {
+      return;
+    }
+    this.commentPlaceholder = `回复 ${(secondCommentItem &&
+      secondCommentItem.fromName) ||
+      commentItem.fromName}:`;
+    this.commentInput.focus();
+    // 储存点击评论信息
+    console.log("commentItem", commentItem);
+    this.replyCommentObj = commentItem;
+    this.replySecondCommentObj = secondCommentItem;
+  }
+  // 点击 评论框@
+  private hfClick(): void {}
+  // 点击 评论框表情
+  private xlClick(): void {}
+  // 点击 评论框发送按钮
+  private sendClick(): void {
+    const value: string = (this.commentMsg && this.commentMsg.trim()) || "";
+    if (!value) {
+      return;
+    }
+    const replyCommentObj = this.replyCommentObj;
+    const replySecondCommentObj = this.replySecondCommentObj;
+    console.log("replyCommentObj", this.replyCommentObj);
+    const { nickName, id } = this.userInfo; // 个人信息
+    // 评论数据
+    const commentObj: CommentObjInterface = {
+      value,
+      fromName: nickName || "",
+      fromId: id || "",
+      commentId: +Date.now(),
+      ...(replyCommentObj
+        ? {
+            toName: replyCommentObj.fromName,
+            toId: replyCommentObj.fromId,
+            toCommentId: replyCommentObj.commentId || ""
+          }
+        : {}),
+      ...(replySecondCommentObj
+        ? {
+            toName: replySecondCommentObj.fromName,
+            toId: replySecondCommentObj.fromId,
+            toCommentId: replySecondCommentObj.commentId || ""
+          }
+        : {})
+    };
+    const videoItem: any = this.videoList[this.videoIndex];
+    if (replyCommentObj) {
+      // 访问接口
+      // 此处模拟
+      if (
+        !replyCommentObj.children ||
+        !Array.isArray(replyCommentObj.children)
+      ) {
+        this.$set(replyCommentObj, "children", [commentObj]);
+        // replyCommentObj.children = [commentObj];
+      } else {
+        // replyCommentObj.children.unshift(commentObj);
+        replyCommentObj.children.push(commentObj);
+      }
+      (replyCommentObj.totalChildrenNum &&
+        replyCommentObj.totalChildrenNum++) ||
+        (replyCommentObj.totalChildrenNum = 1);
+    } else {
+      // 访问接口
+      // 此处模拟
+      if (!videoItem.comment || !Array.isArray(videoItem.comment)) {
+        videoItem.comment = [commentObj];
+      } else {
+        videoItem.comment.push(commentObj);
+      }
+    }
+    videoItem && videoItem.commentNum++;
+    this.commentMsg = "";
+  }
+
+  private resize() {
+    isMiui && (this.keyboardHeight = 74);
+    window.innerHeight === this.screenHeight && (this.keyboardHeight = 0);
+  }
   private created(): void {
-    this.screenWidth = document.body.clientWidth;
+    window.addEventListener("resize", this.resize);
+  }
+  private destoryed(): void {
+    window.removeEventListener("resize", this.resize);
   }
 }
 </script>
@@ -509,10 +552,16 @@ export default class Home extends Vue {
 @import "./index.scss";
 </style>
 <style lang="scss">
-.comment-deatil  {
-  .van-notice-bar {
-    padding: 0;
+.video-play {
+  .inner-info {
+    .van-notice-bar {
+      padding: 0;
+      background-color: rgba(255, 255, 255, 0);
+      color: #ffffff;
+    }
   }
+}
+.comment-deatil {
   .van-overlay {
     //  background-color: rgba(0,0,0,0);
     background-color: transparent;
