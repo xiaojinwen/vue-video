@@ -10,7 +10,7 @@
     }
     .video {
         width: 100%;
-        height: 100%;
+        height: 100%; // object-fit: cover;
         object-fit: fill;
         &::-webkit-media-controls-fullscreen-button {
             display: none !important;
@@ -58,18 +58,43 @@
             opacity: 1;
         }
     }
-    .play-progress {
+    .play-progress-detail {
+        z-index: 101;
+        // background-color: rgba($color: #000000, $alpha: 0.1);
         position: absolute;
-        background: #a3a3a5;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 100px;
+        text-align: center;
+        display: flex;
+        align-items: center;
+        color: #ffffff;
+        font-size: 20px;
+        .inner-progress-detail {
+            width: 100%;
+            display: flex;
+            font-weight: 600;
+            .position {
+                flex: 1;
+                text-align: right;
+            }
+            .total {
+                flex: 1;
+                text-align: left;
+            }
+            .split {
+                flex: 0 0 20px;
+            }
+        }
+    }
+    .play-progress {
+        z-index: 102;
+        position: absolute;
         bottom: 0;
         left: 0;
         width: 100%;
         height: 2px;
-        .inner-play-progress {
-            width: 0;
-            height: 2px;
-            background: #451dfa;
-        }
     }
     .info {
         position: absolute;
@@ -176,8 +201,7 @@
     .comment-list {
         font-size: 16px;
         line-height: 16px;
-        padding-top: 32px;
-        // padding-bottom: 50px;
+        padding-top: 32px; // padding-bottom: 50px;
         .comment-children {
             margin-left: 50px;
             .load-more-btn {

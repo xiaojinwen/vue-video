@@ -28,6 +28,7 @@
             webkit-playsinline
             playsinline
             t7-video-player-type="inline"
+            loop
             @canplay="onCanPlay($event,index)"
             @ended="onEnded"
             @error="onError"
@@ -63,7 +64,7 @@
               <div class="share-text">{{videoItem.shareNum | number}}</div>
             </div>
           </div>
-          <div class="info">
+          <div v-show="!isProgressTouch" class="info">
             <div class="inner-info">
               <div class="title">
                 <i>@</i>
@@ -79,10 +80,22 @@
               >{{videoItem.music}}</van-notice-bar>
             </div>
           </div>
-          <!-- 播放进度条 -->
-          <div class="play-progress">
-            <div class="inner-play-progress" :style="{width:videoItem.percent}"></div>
+          <!-- 播放进度条 拖动时的进度状态显示 -->
+          <div v-if="isProgressTouch" class="play-progress-detail">
+            <div class="inner-progress-detail">
+              <span class="position">{{videoItem.percent | durationFormat}}</span>
+              <span class="split">/</span>
+              <span class="total">{{currentVideoDom && currentVideoDom.duration | durationFormat}}</span>
+            </div>
           </div>
+          <!-- 播放进度条 -->
+          <play-progress
+            class="play-progress"
+            :isTouch.sync="isProgressTouch"
+            :percentage.sync="videoItem.percent"
+            @progress="onProgress"
+          />
+
           <!-- 播放按钮 -->
           <div class="play-icon playicon-animation" v-show="!isPlaying"></div>
         </div>
@@ -221,7 +234,8 @@ const isHuaWei = ua.indexOf("huaweibrowser") > -1;
 const isMiui = ua.indexOf("miuibrowser") > -1;
 @Component({
   components: {
-    CommentItem: () => import("@/components/comment-item.vue")
+    CommentItem: () => import("@/components/comment-item.vue"),
+    playProgress: () => import("@/baseComponent/progress/index.vue")
   },
   filters: {
     number(value: any) {
@@ -235,6 +249,19 @@ const isMiui = ua.indexOf("miuibrowser") > -1;
           return Math.round((num / 10000) * 10) / 10 + "w";
         }
         return num;
+      }
+      return value;
+    },
+    durationFormat(value: any) {
+      function padStart(val: any) {
+        return (Number.parseInt(val, 10) + "").padStart(2, "0");
+      }
+      if (value) {
+        const duration = +value;
+        const m = duration / 60;
+        const s = duration % 60;
+        const arr = [padStart(m), padStart(s)];
+        return arr.join(":");
       }
       return value;
     }
@@ -257,6 +284,7 @@ export default class Home extends Vue {
   private isPlaying: boolean = false; // 是否播放
   private isCanPlay: boolean = false; // 是否能够播放
   private isShowComment: boolean = false; // 是否显示评论详情
+  private isProgressTouch: boolean = false; // 播放进度条是否为touch状态
   private videoList: any[] = videoList; // 视频数据
 
   private currentVideoComment: any = {
@@ -271,6 +299,17 @@ export default class Home extends Vue {
   private replyCommentObj: any; // 回复评论人的评论对象 comment下的对象
   private replySecondCommentObj: any; // 二级评论的对象 comment[index].children下的对象
 
+  // 获取当前页面的video对象
+  private get currentVideoDom(): any {
+    return this.getVideoDom();
+  }
+  private getVideoDom(): any {
+    const videoListDom: any = this.$refs[`video${this.videoIndex}`];
+    console.log("videoListDom", videoListDom);
+    if (videoListDom && videoListDom[0]) {
+      return videoListDom[0];
+    }
+  }
   private beforeEnter(el: any): void {
     el.style.opacity = 1;
     el.style.height = "100%";
@@ -296,8 +335,8 @@ export default class Home extends Vue {
     console.log("currentIndex", currentIndex);
     if (this.isPlaying) {
       // 暂停上个视频
-      const lastVideoDom: any = this.$refs[`video${this.videoIndex}`];
-      lastVideoDom && lastVideoDom[0] && lastVideoDom[0].pause();
+      const currentVideoDom = this.currentVideoDom || this.getVideoDom();
+      currentVideoDom && currentVideoDom.pause();
     }
     this.$nextTick(() => {
       // 播放下一个
@@ -333,25 +372,38 @@ export default class Home extends Vue {
     console.log("onWaiting");
     this.isPlaying = false;
   }
-  // 进度条变化
+  // 播放时进度条变化
   private onTimeUpdate(): void {
-    const videoListDom: any = this.$refs[`video${this.videoIndex}`];
-    if (!videoListDom || !videoListDom[0]) {
+    // 进度条触摸状态禁止
+    if (this.isProgressTouch || !this.currentVideoDom) {
       return;
     }
     const videoItem: any = this.videoList[this.videoIndex];
-    const percent: number =
-      videoListDom[0].currentTime / videoListDom[0].duration;
-    const percentStr: string = Math.round(percent * this.screenWidth) + "px";
-    if (percentStr !== videoItem.percent) {
-      // videoItem.percent = percentStr;
-      this.$set(videoItem, "percent", percentStr);
+    const currentVideoDom = this.currentVideoDom || this.getVideoDom();
+    if (!currentVideoDom) {
+      return;
     }
+    const percent: number =
+      (currentVideoDom.currentTime / currentVideoDom.duration) * 100;
+    this.$set(videoItem, "percent", percent);
   }
+
+  // 进度条被拖动或者被点击
+  private onProgress(percentage: number): void {
+    console.log("onProgress", percentage);
+    const currentVideoDom = this.currentVideoDom || this.getVideoDom();
+    if (!currentVideoDom) {
+      return;
+    }
+    currentVideoDom.currentTime = (percentage / 100) * currentVideoDom.duration;
+    !this.isPlaying && currentVideoDom.play();
+  }
+
   public paly(): void {
-    const videoListDom: any = this.$refs[`video${this.videoIndex}`];
-    if (videoListDom && videoListDom[0]) {
-      this.isPlaying ? videoListDom[0].pause() : videoListDom[0].play();
+    console.log("this.currentVideoDom", this.currentVideoDom);
+    const currentVideoDom = this.currentVideoDom || this.getVideoDom();
+    if (currentVideoDom) {
+      this.isPlaying ? currentVideoDom.pause() : currentVideoDom.play();
     }
   }
   private toLike(videoItem: any, videoIndex: number): void {
@@ -423,12 +475,12 @@ export default class Home extends Vue {
 
   public playOrPause(type: string): void {
     console.log("playOrPause", type);
-    const videoListDom: any = this.$refs[`video${this.videoIndex}`];
-    if (videoListDom && videoListDom[0]) {
+    const currentVideoDom = this.currentVideoDom || this.getVideoDom();
+    if (currentVideoDom) {
       if (type === "play") {
-        videoListDom[0].play();
+        currentVideoDom.play();
       } else if (type === "pause") {
-        videoListDom[0].pause();
+        currentVideoDom.pause();
       }
     }
   }
