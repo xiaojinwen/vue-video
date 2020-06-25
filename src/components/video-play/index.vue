@@ -81,11 +81,13 @@
             </div>
           </div>
           <!-- 播放进度条 拖动时的进度状态显示 -->
-          <div v-if="isProgressTouch" class="play-progress-detail">
+          <div v-if="isProgressTouch && currentVideoDom" class="play-progress-detail">
             <div class="inner-progress-detail">
-              <span class="position">{{videoItem.percent | durationFormat}}</span>
+              <span
+                class="position"
+              >{{videoItem.percent / 100 * currentVideoDom.duration | durationFormat}}</span>
               <span class="split">/</span>
-              <span class="total">{{currentVideoDom && currentVideoDom.duration | durationFormat}}</span>
+              <span class="total">{{currentVideoDom.duration | durationFormat}}</span>
             </div>
           </div>
           <!-- 播放进度条 -->
