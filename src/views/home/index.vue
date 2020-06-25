@@ -19,7 +19,7 @@
 
 <script lang="ts">
 import { Component, Prop, Vue, Ref } from "vue-property-decorator";
-const screenWidth = document.body.clientWidth || window.innerWidth;
+const screenWidth = window.screen.width || document.body.clientWidth;
 const screenHeight = window.innerHeight;
 @Component({
   components: {

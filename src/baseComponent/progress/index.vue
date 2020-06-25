@@ -4,7 +4,7 @@
       class="xjw-progress"
       ref="progress"
       :style="getProgressBoxStyle"
-      @touchstart.stop="touchtart"
+      @touchstart.stop.prevent="touchstart"
       @touchmove.stop="touchmove"
       @touchend.stop="touchend"
       @click.stop="click"
@@ -82,12 +82,13 @@ export default class Progress extends Vue {
       this.$emit("update:percentage", position);
     }
   }
-  private touchtart(e: any): void {
+  private touchstart(e: any): void {
+    // e.preventDefault();
     // console.log("this.isTouch", this.isTouch);
     if (this.isTouch === void 0) {
       return;
     }
-    // console.log("touchtart", e);
+    // console.log("touchstart", e);
     this.$emit("update:isTouch", true);
     this.setProgress(e);
   }

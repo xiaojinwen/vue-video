@@ -11,6 +11,30 @@ export interface CommentObjInterface {
 
 // 视频数据
 export const videoList: any[] = [
+
+  {
+    title: "哔哩哔哩【蛋仙】Girls-打算如何对我?【竖屏】高跟",
+    desc: "【蛋仙】Girls-打算如何对我?【竖屏】高跟",
+    music:
+      "【蛋仙】Girls-打算如何对我",
+    soure: [
+      {
+        src:
+          "https://vdse.bdstatic.com//29e5747396f9348945779f0e9de5ce29.mp4?authorization=bce-auth-v1%2F40f207e648424f47b2e3dfbb1014b1a5%2F2020-06-20T21%3A40%3A46Z%2F-1%2Fhost%2F3173c37a774d79dfe68cff7739a304ea8db5d9f87e210f02a18652645011b6c3",
+        type: "video/mp4"
+      }
+    ],
+    poster:
+      "https://vdgif.bdstatic.com//adbc863aaf78aa2e4b1ceab93bb4b182?x-bce-process=image/resize,m_fill,w_994,h_1766/format,f_jpg/quality,Q_100",
+    likeNum: "635221122",
+    commentNum: "0",
+    shareNum: "3000",
+    isLike: false,
+    percent: 0,
+    videoId: '44554',
+    comment: []
+  },
+
   {
     title: "【寄明月初次投稿】 【竖屏观看】",
     desc: "【寄明月初次投稿】 【竖屏观看】",

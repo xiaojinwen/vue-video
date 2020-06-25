@@ -17,7 +17,7 @@
           <video
             v-if="index>=videoIndex-1 && index<=videoIndex+1"
             :ref="'video'+index"
-            class="video"
+            class="video js-video"
             preload="auto"
             :poster="videoItem.poster"
             x5-video-orientation="portrait"
@@ -43,12 +43,13 @@
             </template>
           </video>
           <img
-            class="video-img"
+            class="video video-img"
             v-else
             :src="videoItem.poster"
             :alt="videoItem.title"
             :title="videoItem.title"
           />
+          <canvas class="canvas js-canvas"></canvas>
           <!-- 右侧操作按钮 -->
           <div class="controls">
             <div class="like" @click.stop="toLike(videoItem,index)">
@@ -81,7 +82,7 @@
             </div>
           </div>
           <!-- 播放进度条 拖动时的进度状态显示 -->
-          <div v-if="isProgressTouch && currentVideoDom" class="play-progress-detail">
+          <div v-if="isProgressTouch" class="play-progress-detail">
             <div class="inner-progress-detail">
               <span
                 class="position"
@@ -97,9 +98,12 @@
             :percentage.sync="videoItem.percent"
             @progress="onProgress"
           />
-
           <!-- 播放按钮 -->
-          <div class="play-icon playicon-animation" v-show="!isPlaying"></div>
+          <div
+            class="play-icon iconfont icon-icon_play playicon-animation"
+            v-if="!isPlaying && isCanPlay"
+          ></div>
+          <div class="loading-icon iconfont icon-jiazaizhong2 loading-animation" v-else-if="!isCanPlay"></div>
         </div>
       </van-swipe-item>
     </van-swipe>
@@ -230,6 +234,8 @@ import { getKeyboardHeight } from "@/utils/index.ts";
 import { Notify } from "vant";
 import { State, Getter, Action, Mutation, namespace } from "vuex-class";
 import { UserInfo } from "@/store/modules/user/states";
+// import { CanvasVideoPlayer } from "@/assets/js/canvas-video-player/index.js";
+
 const userModule = namespace("user");
 const ua: any = navigator.userAgent.toLowerCase();
 const isHuaWei = ua.indexOf("huaweibrowser") > -1;
@@ -262,8 +268,7 @@ const isMiui = ua.indexOf("miuibrowser") > -1;
         const duration = +value;
         const m = duration / 60;
         const s = duration % 60;
-        const arr = [padStart(m), padStart(s)];
-        return arr.join(":");
+        return padStart(m) + ":" + padStart(s);
       }
       return value;
     }
@@ -303,7 +308,7 @@ export default class Home extends Vue {
 
   // 获取当前页面的video对象
   private get currentVideoDom(): any {
-    return this.getVideoDom();
+    return this.getVideoDom() || false;
   }
   private getVideoDom(): any {
     const videoListDom: any = this.$refs[`video${this.videoIndex}`];
@@ -373,6 +378,7 @@ export default class Home extends Vue {
   private onWaiting(): void {
     console.log("onWaiting");
     this.isPlaying = false;
+    this.isCanPlay = false;
   }
   // 播放时进度条变化
   private onTimeUpdate(): void {
@@ -589,13 +595,29 @@ export default class Home extends Vue {
     videoItem && videoItem.commentNum++;
     this.commentMsg = "";
   }
-
+  private noop(): boolean {
+    return false;
+  }
   private resize() {
     isMiui && (this.keyboardHeight = 74);
     window.innerHeight === this.screenHeight && (this.keyboardHeight = 0);
   }
   private created(): void {
     window.addEventListener("resize", this.resize);
+  }
+  private mounted(): void {
+    // 尝试使用canvas播放视频 但是视频播放效果不好
+    // var canvasVideo:any = new CanvasVideoPlayer({
+    //   videoSelector: ".js-video",
+    //   canvasSelector: ".js-canvas",
+    //   hideVideo: true, // should script hide the video element
+    //   autoplay: false,
+    //   // IMPORTANT On iOS can't be used together with autoplay, autoplay will be disabled
+    //   audio: false, // can be true/false (it will use video file for audio), or selector for a separate audio file
+    //   resetOnLastFrame: true, // should video reset back to the first frame after it finishes playing
+    //   loop: false
+    // });
+    // canvasVideo.setCanvasSize(this.screenWidth,this.screenHeight)
   }
   private destoryed(): void {
     window.removeEventListener("resize", this.resize);
