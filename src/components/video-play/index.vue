@@ -49,7 +49,7 @@
             :alt="videoItem.title"
             :title="videoItem.title"
           />
-          <canvas class="canvas js-canvas"></canvas>
+          <!-- <canvas class="canvas js-canvas"></canvas> -->
           <!-- 右侧操作按钮 -->
           <div class="controls">
             <div class="like" @click.stop="toLike(videoItem,index)">
@@ -103,7 +103,10 @@
             class="play-icon iconfont icon-icon_play playicon-animation"
             v-if="!isPlaying && isCanPlay"
           ></div>
-          <div class="loading-icon iconfont icon-jiazaizhong2 loading-animation" v-else-if="!isCanPlay"></div>
+          <div
+            class="loading-icon iconfont icon-jiazaizhong2 loading-animation"
+            v-else-if="!isCanPlay"
+          ></div>
         </div>
       </van-swipe-item>
     </van-swipe>
@@ -125,7 +128,7 @@
         class="comment-list"
         v-if="currentVideoComment.list && currentVideoComment.list.length"
         :style="{
-            paddingBottom: keyboardHeight + 50 +'px'
+            paddingBottom: keyboardHeight + 90 +'px'
           }"
       >
         <div
@@ -195,6 +198,7 @@
       >
         <van-field
           ref="commentInput"
+          id="commentInput"
           label-width="0px"
           v-model="commentMsg"
           center
@@ -203,7 +207,7 @@
           :placeholder="commentPlaceholder || '留下你的精彩评论吧'"
           @focus="onCommentFocus"
           @blur="onCommentBlur"
-          @keyup.enter="sendClick"
+          @keyup.enter="sendClick('clear')"
         >
           <!-- native -->
           <template #button>
@@ -223,14 +227,26 @@
             </div>
           </template>
         </van-field>
+        <div class="emoji-list">
+          <div
+            class="emoji"
+            v-for="(item,index) in emoji"
+            :key="index"
+            @click.stop="emojiClick(item)"
+          >{{item}}</div>
+        </div>
       </div>
     </van-popup>
   </div>
 </template>
 <script lang="ts">
 import { Component, Prop, Vue, Ref } from "vue-property-decorator";
-import { videoList, CommentObjInterface } from "./test-data";
-import { getKeyboardHeight } from "@/utils/index.ts";
+import { videoList, CommentObjInterface, emoji } from "./test-data";
+import {
+  getKeyboardHeight,
+  getCaretPosition,
+  setCaretPosition
+} from "@/utils/index.ts";
 import { Notify } from "vant";
 import { State, Getter, Action, Mutation, namespace } from "vuex-class";
 import { UserInfo } from "@/store/modules/user/states";
@@ -305,14 +321,14 @@ export default class Home extends Vue {
   private keyboardHeight: number = 0; // 键盘高度
   private replyCommentObj: any; // 回复评论人的评论对象 comment下的对象
   private replySecondCommentObj: any; // 二级评论的对象 comment[index].children下的对象
-
+  private emoji: any = Object.values(emoji); // 表情
+  private timer: number = 0; // 计时器id
   // 获取当前页面的video对象
   private get currentVideoDom(): any {
-    return this.getVideoDom() || false;
+    return this.getVideoDom();
   }
   private getVideoDom(): any {
     const videoListDom: any = this.$refs[`video${this.videoIndex}`];
-    console.log("videoListDom", videoListDom);
     if (videoListDom && videoListDom[0]) {
       return videoListDom[0];
     }
@@ -408,7 +424,6 @@ export default class Home extends Vue {
   }
 
   public paly(): void {
-    console.log("this.currentVideoDom", this.currentVideoDom);
     const currentVideoDom = this.currentVideoDom || this.getVideoDom();
     if (currentVideoDom) {
       this.isPlaying ? currentVideoDom.pause() : currentVideoDom.play();
@@ -508,13 +523,19 @@ export default class Home extends Vue {
   private onCommentBlur(e: any): void {
     console.log("onCommentBlur");
     this.keyboardHeight = 0;
-    if (!this.commentMsg) {
-      this.$nextTick(() => {
+    // 此处用settimeout 防止点击表情的时候 评论对象被清除
+    if (this.timer) {
+      clearTimeout(this.timer);
+    }
+    this.timer = setTimeout(() => {
+      console.log("onCommentBlur1");
+      if (!this.commentMsg) {
+        console.log("onCommentBlur2");
         this.replyCommentObj = void 0;
         this.replySecondCommentObj = void 0;
         this.commentPlaceholder = "";
-      });
-    }
+      }
+    }, 0);
   }
 
   // 点击评论内容 评论某人
@@ -522,10 +543,15 @@ export default class Home extends Vue {
     if (!commentItem) {
       return;
     }
+    // 这里把失焦里的计时器清楚掉 fix:对同一个评论对象重复点击时文字闪动
+    if (this.timer) {
+      clearTimeout(this.timer);
+    }
     this.commentPlaceholder = `回复 ${(secondCommentItem &&
       secondCommentItem.fromName) ||
       commentItem.fromName}:`;
     this.commentInput.focus();
+    // console.log("document.activeElement", document.activeElement);
     // 储存点击评论信息
     console.log("commentItem", commentItem);
     this.replyCommentObj = commentItem;
@@ -536,7 +562,7 @@ export default class Home extends Vue {
   // 点击 评论框表情
   private xlClick(): void {}
   // 点击 评论框发送按钮
-  private sendClick(): void {
+  private sendClick(e: any): void {
     const value: string = (this.commentMsg && this.commentMsg.trim()) || "";
     if (!value) {
       return;
@@ -593,17 +619,41 @@ export default class Home extends Vue {
       }
     }
     videoItem && videoItem.commentNum++;
+    this.currentVideoComment.commentNum = videoItem.commentNum;
     this.commentMsg = "";
+    e === "clear" && this.onCommentBlur(e);
   }
-  private noop(): boolean {
-    return false;
+
+  private emojiClick(item: any): void {
+    // 这里把失焦里的计时器清楚掉
+    if (this.timer) {
+      clearTimeout(this.timer);
+    }
+    this.commentInput.focus();
+    const commentInput: any = document.getElementById("commentInput");
+    // 获取当前输入框光标位置
+    const position = getCaretPosition(commentInput);
+    const commentMsg: string = this.commentMsg;
+    this.commentMsg =
+      commentMsg.slice(0, position) + item + commentMsg.slice(position);
+    this.$nextTick(() => {
+      // 设置光标位置为输入表情符号后面
+      setCaretPosition(commentInput, +position + item.length);
+    });
   }
+
   private resize() {
     isMiui && (this.keyboardHeight = 74);
     window.innerHeight === this.screenHeight && (this.keyboardHeight = 0);
   }
   private created(): void {
     window.addEventListener("resize", this.resize);
+    // setInterval(() => {
+    //   const position = getCaretPosition(
+    //     document.getElementById("commentInput")
+    //   );
+    //   console.log("position", position);
+    // }, 3000);
   }
   private mounted(): void {
     // 尝试使用canvas播放视频 但是视频播放效果不好

@@ -62,6 +62,7 @@ export default class Progress extends Vue {
   private get getProgressBoxStyle(): any {
     const styleObj: any = {};
     this.pivotColor && (styleObj.backgroundColor = this.pivotColor);
+    this.isTouch && (styleObj.opacity = 1) && (styleObj.opacity = 1);
     return styleObj;
   }
 
@@ -71,7 +72,10 @@ export default class Progress extends Vue {
       width: this.progressWidth
     };
     this.color && (styleObj.backgroundColor = this.color);
-    this.strokeWidth && (styleObj.height = this.strokeWidth);
+    this.strokeWidth &&
+      (styleObj.height = this.isTouch
+        ? this.strokeWidth * 1.5
+        : this.strokeWidth);
     return styleObj;
   }
 
@@ -132,6 +136,7 @@ export default class Progress extends Vue {
   //   right: -10px;
 }
 .xjw-progress {
+  opacity: 0.5;
   position: relative;
   background: #a3a3a5;
   width: 100%;
