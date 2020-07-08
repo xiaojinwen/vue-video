@@ -11,6 +11,8 @@ if (isDev) {
 }
 
 import { Swipe, SwipeItem, NoticeBar, Popup, Skeleton, Lazyload, Image as VanImage, Icon, Divider, Sticky, Field, Button, Notify } from 'vant';
+// import { Tabbar, TabbarItem } from 'vant';
+import { Tab, Tabs } from 'vant';
 Vue.use(Swipe);
 Vue.use(SwipeItem);
 Vue.use(NoticeBar);
@@ -24,6 +26,10 @@ Vue.use(Sticky);
 Vue.use(Field);
 Vue.use(Button);
 Vue.use(Notify);
+// Vue.use(Tabbar);
+// Vue.use(TabbarItem);
+Vue.use(Tab);
+Vue.use(Tabs);
 Vue.config.productionTip = false;
 
 new Vue({

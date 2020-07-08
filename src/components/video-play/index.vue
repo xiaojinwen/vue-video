@@ -49,7 +49,7 @@
             :alt="videoItem.title"
             :title="videoItem.title"
           />
-          <!-- <canvas class="canvas js-canvas"></canvas> -->
+          <canvas class="canvas js-canvas"></canvas>
           <!-- 右侧操作按钮 -->
           <div class="controls">
             <div class="like" @click.stop="toLike(videoItem,index)">
@@ -98,11 +98,12 @@
             :percentage.sync="videoItem.percent"
             @progress="onProgress"
           />
-          <!-- 播放按钮 -->
+          <!-- 播放按钮-->
           <div
             class="play-icon iconfont icon-icon_play playicon-animation"
             v-if="!isPlaying && isCanPlay"
           ></div>
+          <!-- loading -->
           <div
             class="loading-icon iconfont icon-jiazaizhong2 loading-animation"
             v-else-if="!isCanPlay"
@@ -250,7 +251,7 @@ import {
 import { Notify } from "vant";
 import { State, Getter, Action, Mutation, namespace } from "vuex-class";
 import { UserInfo } from "@/store/modules/user/states";
-// import { CanvasVideoPlayer } from "@/assets/js/canvas-video-player/index.js";
+import { CanvasVideoPlayer } from "@/assets/js/canvas-video-player/index.js";
 
 const userModule = namespace("user");
 const ua: any = navigator.userAgent.toLowerCase();
@@ -302,7 +303,7 @@ export default class Home extends Vue {
     type: Number
   })
   private screenHeight!: number; // 屏幕高度 用于防止输入法弹出导致页面压缩
-  @Ref() readonly commentInput!: any; // 评论输入框
+  @Ref() readonly commentInput: any; // 评论输入框
   private videoIndex: number = 0; // 视频的位置
   private isPlaying: boolean = false; // 是否播放
   private isCanPlay: boolean = false; // 是否能够播放

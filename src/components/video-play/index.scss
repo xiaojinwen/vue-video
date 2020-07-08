@@ -46,13 +46,13 @@
     .loading-animation {
         opacity: 0;
         transform: scale(2);
+        transform-origin: 50% 48%;
         animation: loading-show 1.2s ease-in-out infinite;
     }
     @keyframes loading-show {
         0% {
             transform: rotateZ(-90deg);
-        }
-        // 25% {
+        } // 25% {
         //     transform: rotateZ(90deg);
         // }
         // 50% {
@@ -82,8 +82,7 @@
     }
     .play-progress-detail {
         z-index: 101; // background-color: rgba($color: #000000, $alpha: 0.1);
-        position: absolute;
-        // bottom: 0;
+        position: absolute; // bottom: 0;
         bottom: 40px;
         left: 0;
         width: 100%;
@@ -112,8 +111,7 @@
     }
     .play-progress {
         z-index: 102;
-        position: absolute;
-        // bottom: 0;
+        position: absolute; // bottom: 0;
         bottom: 40px;
         left: 0;
         width: 100%;
@@ -134,8 +132,7 @@
         box-sizing: border-box;
         .inner-info {
             padding: 0 10px 0;
-            position: absolute;
-            // bottom: 0; // width: calc(100%-20px);
+            position: absolute; // bottom: 0; // width: calc(100%-20px);
             bottom: 40px;
             box-sizing: border-box;
             width: 100%;
@@ -255,16 +252,14 @@
         position: fixed;
         left: 0;
         right: 0;
-        bottom: 0;
-        // height: 50px;
+        bottom: 0; // height: 50px;
         height: 90px;
         z-index: inherit;
         font-weight: 500;
         font-size: 14px;
         line-height: 14px;
         text-align: center;
-        background: #fff;
-        // display: flex;
+        background: #fff; // display: flex;
         .comment-msg-btn {
             width: 100px;
             display: flex;
@@ -293,13 +288,13 @@
                 }
             }
         }
-        .emoji-list{
+        .emoji-list {
             height: 40px;
             display: flex;
             align-items: center;
             text-align: center;
             overflow-y: scroll;
-            .emoji{
+            .emoji {
                 flex: 0 0 40px;
                 display: inline-block;
             }
