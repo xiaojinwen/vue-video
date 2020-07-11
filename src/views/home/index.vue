@@ -1,20 +1,13 @@
 <template>
   <div class="home">
-    <div class="home-header" :style="homeBtnGroupStyle">
-      <div class="header-item boundary iconfont icon-zhibo" @click.stop="headerBtnClick('live')"></div>
-      <div class="header-item header-center-group">
-        <div class="inner-header-center">
-          <div
-            class="item"
-            v-for="(headerItem,index) in headerBtnArr"
-            :key="index"
-            :class="swipeIndex === index ? 'active':''"
-            @click.stop="headerBtnClick(index)"
-          >{{headerItem.name}}</div>
-        </div>
-      </div>
-      <div class="header-item boundary iconfont icon-sousuo" @click.stop="headerBtnClick('search')"></div>
-    </div>
+    <home-header
+      class="home-header"
+      :style="homeBtnGroupStyle"
+      :indicators-style="homeHeaderStyle"
+      :swipe-index="swipeIndex"
+      :header-btn-arr="headerBtnArr"
+      @header-btn-click="headerBtnClick"
+    ></home-header>
     <van-swipe
       class="horizontal-swipe"
       ref="horizontalSwipe"
@@ -24,179 +17,133 @@
       :initial-swipe="1"
       @change="horizontalSwipeChange"
     >
-      <!-- @touchstart="mainTouchstart" -->
-      <!-- @touchmove="mainTouchmove" -->
-      <!-- @touchend="mainTouchend" -->
-      <van-swipe-item>关注</van-swipe-item>
+      <van-swipe-item>
+        <video-play ref="focusVideoPlay" :screenWidth="screenWidth" :screenHeight="screenHeight"></video-play>
+      </van-swipe-item>
       <van-swipe-item class="home-page">
         <video-play ref="videoPlay" :screenWidth="screenWidth" :screenHeight="screenHeight"></video-play>
       </van-swipe-item>
       <van-swipe-item>媒体页面</van-swipe-item>
     </van-swipe>
-    <div class="home-btn-group" :style="homeBtnGroupStyle">
-      <div
-        class="home-btn-item"
-        v-for="(item,index) in mainBtnArr"
-        :key="index"
-        :class="{
-              'iconfont': !!item.icon,
-              [item.icon]: !!item.icon,
-              'active': activeIndex === index,
-            }"
-        @click.stop="mainBtnClick(item,index)"
-      >{{!item.icon && item.name || ''}}</div>
-    </div>
+    <!-- <router-view /> -->
   </div>
 </template>
 
 <script lang="ts">
 import { Component, Prop, Vue, Ref } from "vue-property-decorator";
-import Direction from "@/utils/getDirection.ts";
+// import Direction from "@/utils/getDirection.ts";
 
-const screenWidth = window.screen.width || document.body.clientWidth;
-const screenHeight = window.innerHeight;
+// const screenWidth = window.screen.width || document.body.clientWidth;
+// const screenHeight = window.innerHeight;
 @Component({
   components: {
-    VideoPlay: () => import("@/components/video-play/index.vue")
+    VideoPlay: () => import("@/components/video-play/index.vue"),
+    HomeHeader: () => import("@/components/home-header/index.vue")
   }
 })
 export default class Home extends Vue {
-  @Ref() readonly horizontalSwipe: any; // 评论输入框
-  private screenWidth: number = screenWidth; // 屏幕宽度 用于计算播放进度条
-  private screenHeight: number = screenHeight; // 屏幕高度 用于防止输入法弹出导致页面压缩
+  @Ref() readonly horizontalSwipe: any; // 横向滑动的swipe组件
+  @Ref() readonly commentInput: any; // 评论输入框
+  @Ref() readonly videoPlay: any; // videoPlay
+  @Ref() readonly focusVideoPlay: any; // focusVideoPlay
+
+  @Prop({
+    type: Number,
+    default: 1
+  })
+  private swipeIndex!: number; // swipe的位置
+  @Prop({
+    type: Number,
+    default: 0
+  })
+  private screenWidth!: number; // 屏幕宽度 用于计算播放进度条
+  @Prop({
+    type: Number,
+    default: 0
+  })
+  private screenHeight!: number; // 屏幕高度 用于防止输入法弹出导致页面压缩
+
+  @Prop({
+    type: Number,
+    default: 0
+  })
+  private headerTranslateX!: number; //  顶部按钮指示点的translateX 值
+
+  @Prop({
+    type: Number,
+    default: 0
+  })
+  private originHeaderTranslateX!: number; // 顶部按钮指示点的translateX 值
+
+  @Prop({
+    type: Array,
+    default() {
+      return [];
+    }
+  })
+  private mainBtnArr!: any[]; // 首页主按钮
+
+  @Prop() private homeHeaderStyle!: any;
+  @Prop() private homeBtnGroupStyle!: any;
+  // private screenWidth: number = screenWidth; // 屏幕宽度 用于计算播放进度条
+  // private screenHeight: number = screenHeight; // 屏幕高度 用于防止输入法弹出导致页面压缩
   private headerBtnArr: any[] = [
     {
       name: "关注",
-      icon: ""
+      icon: "",
+      badge: 5
     },
     {
       name: "推荐",
       icon: ""
     }
   ]; // 首页主按钮
-  private mainBtnArr: any[] = [
-    {
-      name: "首页",
-      icon: ""
-    },
-    {
-      name: "深圳",
-      icon: ""
-    },
-    {
-      name: "",
-      icon: "icon-jiahao"
-    },
-    {
-      name: "消息",
-      icon: ""
-    },
-    {
-      name: "我的",
-      icon: ""
-    }
-  ]; // 首页主按钮
-  private swipeIndex: number = 1; // swipe的位置
-  private activeIndex: number = 0; // 按钮 active
-  private translateX: any = ""; // 底部按钮的translateX 值
-  private originTranslateX: any = ""; // 底部按钮的translateX 值
-  private startX: number = 0; // 触摸开始位置 X
-  private startY: number = 0; // 触摸开始位置 Y
-  private path: any = []; // 位置
-  private Direction: any; // Direction
 
-  get homeBtnGroupStyle(): any {
-    return {
-      transitionDuration: this.startX ? "0ms" : "500ms",
-      transform: `translateX(${this.translateX}px`
-    };
-  }
   private horizontalSwipeChange(index: number): void {
-    this.swipeIndex = index;
+    // this.swipeIndex = index;
+    this.$emit("update:swipeIndex", index);
+    if (this.headerBtnArr[index] && this.headerBtnArr[index].badge) {
+      this.headerBtnArr[index].badge = 0;
+    }
     console.log("index", index);
     // 暂停视频
-    const videoListDom: any = this.$refs.videoPlay;
+    const videoListDom: any = this.videoPlay;
+    const focusVideoListDom: any = this.focusVideoPlay;
     if (index === 1) {
-      videoListDom.playOrPause("play");
+      videoListDom && videoListDom.playOrPause("play");
+      focusVideoListDom && focusVideoListDom.playOrPause("pause");
+    } else if (index === 0) {
+      videoListDom && videoListDom.playOrPause("pause");
+      focusVideoListDom && focusVideoListDom.playOrPause("play");
     } else {
-      videoListDom.playOrPause("pause");
+      videoListDom && videoListDom.playOrPause("pause");
+      focusVideoListDom && focusVideoListDom.playOrPause("pause");
     }
+    this.setHeaderTranslate();
   }
 
   private headerBtnClick(index: number | string): void {
     if (index === 0 || index === 1) {
       this.horizontalSwipe.swipeTo(index, { immediate: true });
+    } else if (index === "search") {
+      const videoListDom: any =
+        this.swipeIndex === 1 ? this.videoPlay : this.focusVideoPlay;
+      const focusVideoListDom: any = this.focusVideoPlay;
+      videoListDom && videoListDom.playOrPause("pause");
     }
   }
 
-  private mainBtnClick(item: any, index: number): void {
-    if (index === Math.ceil(this.mainBtnArr.length / 2) - 1) {
-      return;
-    }
-    this.activeIndex = index;
-  }
-
-  private mainTouchstart(e: any): void {
-    console.log("mainTouchstart e", e);
-    this.startX = e.touches[0].clientX;
-    this.startY = e.touches[0].clientY;
-  }
-  private mainTouchmove(e: any): void {
-    if (this.swipeIndex === 0) {
-      return;
-    }
-    // console.log("mainTouchmove e", e);
-    const endX = e.changedTouches[0].clientX;
-    const endY = e.changedTouches[0].clientY;
-    const disX: number = endX - this.startX;
-    const disY: number = endY - this.startY;
-    const absX: number = Math.abs(disX);
-    const absY: number = Math.abs(disY);
-    const scale = absX / absY;
-    const direction = this.Direction.getDirection();
-    // console.log("direction", direction);
-    if (direction === 1 || direction === 2) {
-      return;
-    }
-    // console.log("disX", disX);
+  private setHeaderTranslate(): void {
+    let headerTranslateX: number = 0;
     if (this.swipeIndex === 1) {
-      if (disX !== this.translateX) {
-        this.translateX = disX > 0 ? 0 : disX;
-      }
-    } else if (this.swipeIndex === 2) {
-      const x = this.originTranslateX + disX;
-      if (x !== this.translateX) {
-        this.translateX = x > 0 ? 0 : x;
-      }
+      headerTranslateX = 0;
+    } else if (this.swipeIndex === 0) {
+      headerTranslateX = -50;
     }
-    // console.log("this.translateX", this.translateX);
-  }
-  private mainTouchend(e: any): void {
-    this.startX = 0;
-    this.startY = 0;
-    this.path = [];
-    if (this.swipeIndex === 0) {
-      return;
-    }
-    // console.log("mainTouchend e", e);
-    if (this.swipeIndex === 2) {
-      this.translateX = -this.screenWidth;
-    } else {
-      this.translateX = 0;
-    }
-    this.originTranslateX = this.translateX;
-    // console.log("this.translateX", this.translateX);
-  }
-  private created(): void {
-    this.Direction = new Direction({
-      touchstart: this.mainTouchstart,
-      touchmove: this.mainTouchmove,
-      touchend: this.mainTouchend
-    });
-  }
-  private destoryed(): void {
-    this.Direction.destoryed();
-    this.Direction = null;
+    // this.headerTranslateX = headerTranslateX;
+    // this.originHeaderTranslateX = this.headerTranslateX;
+    this.$emit("update:headerTranslateX", headerTranslateX);
+    this.$emit("update:originHeaderTranslateX", headerTranslateX);
   }
 }
 </script>
@@ -204,4 +151,9 @@ export default class Home extends Vue {
 @import "./index.scss";
 </style>
 <style lang="scss">
+.home-header {
+  .van-info {
+    background-color: #ff940b;
+  }
+}
 </style>

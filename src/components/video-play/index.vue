@@ -14,8 +14,9 @@
         <div class="video-box">
           <!-- 视频 最高缓存三个video -->
           <!-- :autoplay="videoIndex === index" -->
+          <!-- v-if="index>=videoIndex-1 && index<=videoIndex+1" -->
           <video
-            v-if="index>=videoIndex-1 && index<=videoIndex+1"
+            v-if="index===videoIndex"
             :ref="'video'+index"
             class="video js-video"
             preload="auto"
@@ -49,7 +50,7 @@
             :alt="videoItem.title"
             :title="videoItem.title"
           />
-          <canvas class="canvas js-canvas"></canvas>
+          <!-- <canvas class="canvas js-canvas"></canvas> -->
           <!-- 右侧操作按钮 -->
           <div class="controls">
             <div class="like" @click.stop="toLike(videoItem,index)">
@@ -357,12 +358,13 @@ export default class Home extends Vue {
 
   private swipeChange(currentIndex: number): void {
     console.log("currentIndex", currentIndex);
-    if (this.isPlaying) {
-      // 暂停上个视频
-      const currentVideoDom = this.currentVideoDom || this.getVideoDom();
-      currentVideoDom && currentVideoDom.pause();
-    }
     this.$nextTick(() => {
+      if (this.isPlaying) {
+        // 暂停上个视频
+        const lastVideoDom = this.currentVideoDom || this.getVideoDom();
+        lastVideoDom && lastVideoDom.pause();
+      }
+
       // 播放下一个
       const currentVideoDom: any = this.$refs[`video${currentIndex}`];
       currentVideoDom && currentVideoDom[0] && currentVideoDom[0].play();
@@ -371,29 +373,29 @@ export default class Home extends Vue {
   }
 
   private onCanPlay(event: any, index: number): void {
-    console.log("onCanPlay");
+    // console.log("onCanPlay");
     this.isCanPlay = true;
   }
   private onEnded(): void {
-    console.log("onEnded");
+    // console.log("onEnded");
   }
   private onError(e: any): void {
-    console.log("onError", e);
+    console.error("onError", e);
   }
   private onpause(): void {
-    console.log("onpause");
+    // console.log("onpause");
     this.isPlaying = false;
   }
   private onPlay(): void {
-    console.log("onPlay");
+    // console.log("onPlay");
   }
   private onPlaying(): void {
-    console.log("onPlaying");
+    // console.log("onPlaying");
     this.isPlaying = true;
   }
   // 视频因缓存暂停时
   private onWaiting(): void {
-    console.log("onWaiting");
+    // console.log("onWaiting");
     this.isPlaying = false;
     this.isCanPlay = false;
   }
@@ -649,12 +651,6 @@ export default class Home extends Vue {
   }
   private created(): void {
     window.addEventListener("resize", this.resize);
-    // setInterval(() => {
-    //   const position = getCaretPosition(
-    //     document.getElementById("commentInput")
-    //   );
-    //   console.log("position", position);
-    // }, 3000);
   }
   private mounted(): void {
     // 尝试使用canvas播放视频 但是视频播放效果不好
