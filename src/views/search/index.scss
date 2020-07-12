@@ -1,0 +1,53 @@
+.search {
+    z-index: 105;
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: rgba(0, 0, 0, 0.9);
+    color: #d6d5d5;
+    .search-input {
+        height: 50px;
+        background-color: transparent;
+        .left-icon {
+            color: #d6d5d5;
+        }
+        .bottom {
+            color: #FF2121;
+        }
+    }
+    .history-list {
+        color: #d6d5d5;
+        text-align: left;
+        font-size: 16px;
+        .history-item {
+            display: flex;
+            align-items: baseline;
+            height: 24px;
+            padding: 4px 14px;
+            .left-icon {
+                margin-right: 10px;
+                flex: 0 0 20px;
+            }
+            .right-icon {
+                flex: 0 0 20px;
+            }
+            .text {
+                // flex-grow: 1;
+                // flex-shrink: 1;
+                // flex-basis: auto;
+                flex: 1;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap; // 空白不换行
+            }
+        }
+        .history-bottom {
+            color: #b9b6b6;
+            height: 60px;
+            line-height: 60px;
+            text-align: center;
+        }
+    }
+}

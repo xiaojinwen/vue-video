@@ -22,12 +22,7 @@ import { Component, Prop, Vue, Emit } from "vue-property-decorator";
 @Component
 export default class CommentItem extends Vue {
   // "header-btn-click"
-  @Emit() private headerBtnClick(index: number | string): void {
-    if (index === "search") {
-      this.$router.push("/search").catch((err: Error) => err);
-      console.log("sss");
-    }
-  }
+  @Emit() private headerBtnClick(index: number | string): void {}
   @Prop() private boxStyle?: any; // box的style
   @Prop() private indicatorsStyle?: any; // 指示器的style
   @Prop({

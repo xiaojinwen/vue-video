@@ -2,6 +2,7 @@ import Vue from 'vue';
 import VueRouter, { RouteConfig } from 'vue-router';
 import Home from '@/views/home/index.vue';
 import Mine from '@/views/mine/index.vue';
+import Search from '@/views/search/index.vue';
 
 Vue.use(VueRouter);
 
@@ -15,11 +16,13 @@ const routes: RouteConfig[] = [
     path: '/home',
     name: 'Home',
     component: Home,
-  },
-  {
-    path: '/search',
-    name: 'search',
-    component: Home,
+    children: [
+      {
+        path: 'search',
+        name: 'search',
+        component: Search,
+      },
+    ]
   },
   {
     path: '/mine',

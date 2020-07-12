@@ -4,9 +4,12 @@
       :swipe-index.sync="swipeIndex"
       :screen-width="screenWidth"
       :screen-height="screenHeight"
+      :header-translate-x.sync="headerTranslateX"
+      :origin-header-translate-x.sync="originHeaderTranslateX"
       :main-btn-arr="mainBtnArr"
       :home-header-style="homeHeaderStyle"
       :home-btn-group-style="homeBtnGroupStyle"
+      @set-header-translate="setHeaderTranslate"
     />
     <div class="home-btn-group" :style="homeBtnGroupStyle">
       <div
@@ -158,10 +161,11 @@ export default class App extends Vue {
     this.setHeaderTranslate();
   }
 
-  private setHeaderTranslate(): void {
-    if (this.swipeIndex === 1) {
+  private setHeaderTranslate(index?: number): void {
+    const _index = typeof index !== "undefined" ? index : this.swipeIndex;
+    if (_index === 1) {
       this.headerTranslateX = 0;
-    } else if (this.swipeIndex === 0) {
+    } else if (_index === 0) {
       this.headerTranslateX = -50;
     }
     this.originHeaderTranslateX = this.headerTranslateX;

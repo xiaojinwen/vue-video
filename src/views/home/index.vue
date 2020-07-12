@@ -25,13 +25,16 @@
       </van-swipe-item>
       <van-swipe-item>媒体页面</van-swipe-item>
     </van-swipe>
-    <!-- <router-view /> -->
+    <router-view @cancle="play('play')" />
   </div>
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue, Ref } from "vue-property-decorator";
+import { Component, Prop, Vue, Ref, Emit } from "vue-property-decorator";
+// import Direction from "@/utils/getDirection.ts";
 
+// const screenWidth = window.screen.width || document.body.clientWidth;
+// const screenHeight = window.innerHeight;
 @Component({
   components: {
     VideoPlay: () => import("@/components/video-play/index.vue"),
@@ -39,6 +42,7 @@ import { Component, Prop, Vue, Ref } from "vue-property-decorator";
   }
 })
 export default class Home extends Vue {
+  @Emit() private setHeaderTranslate(index: number): void {}
   @Ref() readonly horizontalSwipe: any; // 横向滑动的swipe组件
   @Ref() readonly commentInput: any; // 评论输入框
   @Ref() readonly videoPlay: any; // videoPlay
@@ -61,6 +65,18 @@ export default class Home extends Vue {
   private screenHeight!: number; // 屏幕高度 用于防止输入法弹出导致页面压缩
 
   @Prop({
+    type: Number,
+    default: 0
+  })
+  private headerTranslateX!: number; //  顶部按钮指示点的translateX 值
+
+  @Prop({
+    type: Number,
+    default: 0
+  })
+  private originHeaderTranslateX!: number; // 顶部按钮指示点的translateX 值
+
+  @Prop({
     type: Array,
     default() {
       return [];
@@ -70,6 +86,8 @@ export default class Home extends Vue {
 
   @Prop() private homeHeaderStyle!: any;
   @Prop() private homeBtnGroupStyle!: any;
+  // private screenWidth: number = screenWidth; // 屏幕宽度 用于计算播放进度条
+  // private screenHeight: number = screenHeight; // 屏幕高度 用于防止输入法弹出导致页面压缩
   private headerBtnArr: any[] = [
     {
       name: "关注",
@@ -84,10 +102,11 @@ export default class Home extends Vue {
 
   private horizontalSwipeChange(index: number): void {
     this.$emit("update:swipeIndex", index);
+    console.log("old this.swipeIndex", this.swipeIndex);
+    console.log("new index", index);
     if (this.headerBtnArr[index] && this.headerBtnArr[index].badge) {
       this.headerBtnArr[index].badge = 0;
     }
-    console.log("index", index);
     // 暂停视频
     const videoListDom: any = this.videoPlay;
     const focusVideoListDom: any = this.focusVideoPlay;
@@ -101,17 +120,23 @@ export default class Home extends Vue {
       videoListDom && videoListDom.playOrPause("pause");
       focusVideoListDom && focusVideoListDom.playOrPause("pause");
     }
+    this.setHeaderTranslate(index);
   }
 
   private headerBtnClick(index: number | string): void {
     if (index === 0 || index === 1) {
       this.horizontalSwipe.swipeTo(index, { immediate: true });
     } else if (index === "search") {
-      const videoListDom: any =
-        this.swipeIndex === 1 ? this.videoPlay : this.focusVideoPlay;
-      const focusVideoListDom: any = this.focusVideoPlay;
-      videoListDom && videoListDom.playOrPause("pause");
+      this.play("pause");
+      this.$router.push("home/search").catch((err: Error) => console.log(err));
     }
+  }
+
+  private play(type: string = "pause") {
+    const videoListDom: any =
+      this.swipeIndex === 1 ? this.videoPlay : this.focusVideoPlay;
+    const focusVideoListDom: any = this.focusVideoPlay;
+    videoListDom && videoListDom.playOrPause(type);
   }
 }
 </script>
