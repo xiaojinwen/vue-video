@@ -31,10 +31,7 @@
 
 <script lang="ts">
 import { Component, Prop, Vue, Ref, Emit } from "vue-property-decorator";
-// import Direction from "@/utils/getDirection.ts";
 
-// const screenWidth = window.screen.width || document.body.clientWidth;
-// const screenHeight = window.innerHeight;
 @Component({
   components: {
     VideoPlay: () => import("@/components/video-play/index.vue"),
@@ -86,8 +83,6 @@ export default class Home extends Vue {
 
   @Prop() private homeHeaderStyle!: any;
   @Prop() private homeBtnGroupStyle!: any;
-  // private screenWidth: number = screenWidth; // 屏幕宽度 用于计算播放进度条
-  // private screenHeight: number = screenHeight; // 屏幕高度 用于防止输入法弹出导致页面压缩
   private headerBtnArr: any[] = [
     {
       name: "关注",
