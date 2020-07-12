@@ -15,9 +15,6 @@
       </div>
     </div>
     <div class="header-item boundary iconfont icon-sousuo" @click.stop="headerBtnClick('search')"></div>
-    <transition name="van-fade">
-      <div class="search" v-if="searchVisible">Fade</div>
-    </transition>
   </div>
 </template>
 <script lang="ts">
@@ -27,7 +24,8 @@ export default class CommentItem extends Vue {
   // "header-btn-click"
   @Emit() private headerBtnClick(index: number | string): void {
     if (index === "search") {
-      this.searchVisible = true;
+      this.$router.push("/search").catch((err: Error) => err);
+      console.log("sss");
     }
   }
   @Prop() private boxStyle?: any; // box的style
@@ -45,7 +43,6 @@ export default class CommentItem extends Vue {
     default: 1
   })
   private swipeIndex!: number; // 位置
-  private searchVisible: boolean = false; // 搜索页面是否显示
   private getheaderActiveClass(index: number): string {
     return this.swipeIndex === index ||
       (this.swipeIndex + 1 > this.headerBtnArr.length &&

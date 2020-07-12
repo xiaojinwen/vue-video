@@ -37,8 +37,6 @@ export default class Direction {
     private onlyUseEndPoint: boolean = true; // 是否仅使用结束点坐标计算行为(否:时候用path储存的路径计算行为)
     private _startX: any = 0; // 触摸开始是x位置
     private _startY: any = 0; // 触摸开始是y位置
-    private _endX: any = 0; // 触摸结束的x位置
-    private _endY: any = 0; // 触摸结束的y位置
 
     private event: TouchEvent = {
         touchstart: this.noop,
@@ -66,14 +64,10 @@ export default class Direction {
 
     /**
      * 根据起点终点返回方向  有点问题 对于来回按着滑动的会右偏差问题
-     * @param param0 位置参数
      * @return Object 1向上滑动 2向下滑动 3向左滑动 4向右滑动 0点击事件
      */
     private getDirection(): number {
-        const arr: any = this.onlyUseEndPoint ? [{
-            x: this._endX,
-            y: this._endY
-        }] : this.path;
+        const arr: any = this.path;
         const angx: number = arr[arr.length - 1].x - this._startX;
         const angy: number = arr[arr.length - 1].y - this._startY;
         let result: number = 0;
@@ -112,16 +106,19 @@ export default class Direction {
     private touchmove(e: any): void {
         const endX = e.changedTouches[0].clientX;
         const endY = e.changedTouches[0].clientY;
-        this._endX = endX;
-        this._endY = endY;
         if (!this.onlyUseEndPoint) {
             const arr: any = this.path;
-            if (arr.length < this.pathLen) {
+            if (arr.length <= this.pathLen) {
                 arr.push({
                     x: endX,
                     y: endY
                 });
             }
+        } else {
+            this.path = [{
+                x: endX,
+                y: endY
+            }];
         }
         this.event.touchmove && this.event.touchmove(e);
     }

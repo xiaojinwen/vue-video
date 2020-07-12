@@ -31,10 +31,7 @@
 
 <script lang="ts">
 import { Component, Prop, Vue, Ref } from "vue-property-decorator";
-// import Direction from "@/utils/getDirection.ts";
 
-// const screenWidth = window.screen.width || document.body.clientWidth;
-// const screenHeight = window.innerHeight;
 @Component({
   components: {
     VideoPlay: () => import("@/components/video-play/index.vue"),
@@ -64,18 +61,6 @@ export default class Home extends Vue {
   private screenHeight!: number; // 屏幕高度 用于防止输入法弹出导致页面压缩
 
   @Prop({
-    type: Number,
-    default: 0
-  })
-  private headerTranslateX!: number; //  顶部按钮指示点的translateX 值
-
-  @Prop({
-    type: Number,
-    default: 0
-  })
-  private originHeaderTranslateX!: number; // 顶部按钮指示点的translateX 值
-
-  @Prop({
     type: Array,
     default() {
       return [];
@@ -85,8 +70,6 @@ export default class Home extends Vue {
 
   @Prop() private homeHeaderStyle!: any;
   @Prop() private homeBtnGroupStyle!: any;
-  // private screenWidth: number = screenWidth; // 屏幕宽度 用于计算播放进度条
-  // private screenHeight: number = screenHeight; // 屏幕高度 用于防止输入法弹出导致页面压缩
   private headerBtnArr: any[] = [
     {
       name: "关注",
@@ -100,7 +83,6 @@ export default class Home extends Vue {
   ]; // 首页主按钮
 
   private horizontalSwipeChange(index: number): void {
-    // this.swipeIndex = index;
     this.$emit("update:swipeIndex", index);
     if (this.headerBtnArr[index] && this.headerBtnArr[index].badge) {
       this.headerBtnArr[index].badge = 0;
@@ -119,7 +101,6 @@ export default class Home extends Vue {
       videoListDom && videoListDom.playOrPause("pause");
       focusVideoListDom && focusVideoListDom.playOrPause("pause");
     }
-    this.setHeaderTranslate();
   }
 
   private headerBtnClick(index: number | string): void {
@@ -131,19 +112,6 @@ export default class Home extends Vue {
       const focusVideoListDom: any = this.focusVideoPlay;
       videoListDom && videoListDom.playOrPause("pause");
     }
-  }
-
-  private setHeaderTranslate(): void {
-    let headerTranslateX: number = 0;
-    if (this.swipeIndex === 1) {
-      headerTranslateX = 0;
-    } else if (this.swipeIndex === 0) {
-      headerTranslateX = -50;
-    }
-    // this.headerTranslateX = headerTranslateX;
-    // this.originHeaderTranslateX = this.headerTranslateX;
-    this.$emit("update:headerTranslateX", headerTranslateX);
-    this.$emit("update:originHeaderTranslateX", headerTranslateX);
   }
 }
 </script>

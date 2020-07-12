@@ -1,5 +1,7 @@
 <template>
-  <div class="search">search</div>
+  <transition name="van-fade">
+    <div class="search">search</div>
+  </transition>
 </template>
 
 <script lang="ts">

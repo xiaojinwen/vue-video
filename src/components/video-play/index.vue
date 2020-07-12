@@ -500,7 +500,7 @@ export default class Home extends Vue {
   }
 
   public playOrPause(type: string): void {
-    console.log("playOrPause", type);
+    // console.log("playOrPause", type);
     const currentVideoDom = this.currentVideoDom || this.getVideoDom();
     if (currentVideoDom) {
       if (type === "play") {

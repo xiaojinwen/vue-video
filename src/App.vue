@@ -1,11 +1,9 @@
 <template>
   <div id="app">
     <router-view
-      :swipe-Index.sync="swipeIndex"
+      :swipe-index.sync="swipeIndex"
       :screen-width="screenWidth"
       :screen-height="screenHeight"
-      :header-translate-x.sync="headerTranslateX"
-      :origin-header-translate-x.sync="originHeaderTranslateX"
       :main-btn-arr="mainBtnArr"
       :home-header-style="homeHeaderStyle"
       :home-btn-group-style="homeBtnGroupStyle"
@@ -93,7 +91,7 @@ export default class App extends Vue {
     }
     this.activeIndex = index;
     item.url &&
-      this.$router.push(item.url).catch((err) => {
+      this.$router.push(item.url).catch((err: Error) => {
         console.log(err);
       });
   }
@@ -147,7 +145,6 @@ export default class App extends Vue {
     this.startX = 0;
     this.startY = 0;
     // console.log("mainTouchend e", e);
-
     if (this.swipeIndex !== 0) {
       if (this.swipeIndex === 2) {
         this.translateX = -this.screenWidth;
