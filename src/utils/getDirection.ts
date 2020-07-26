@@ -51,7 +51,7 @@ export default class Direction {
         document.addEventListener("touchend", this.touchend.bind(this), false);
         this.event = config;
         config.pathLen && (this.pathLen = config.pathLen);
-        config.onlyUseEndPoint && (this.onlyUseEndPoint = config.onlyUseEndPoint);
+        typeof config.onlyUseEndPoint !== 'undefined' && (this.onlyUseEndPoint = config.onlyUseEndPoint);
     }
 
 

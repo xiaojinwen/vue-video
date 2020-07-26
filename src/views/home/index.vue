@@ -25,7 +25,9 @@
       </van-swipe-item>
       <van-swipe-item>媒体页面</van-swipe-item>
     </van-swipe>
-    <router-view @cancle="play('play')" />
+    <transition name="van-fade">
+      <router-view @cancle="play('play')" />
+    </transition>
   </div>
 </template>
 
@@ -97,8 +99,8 @@ export default class Home extends Vue {
 
   private horizontalSwipeChange(index: number): void {
     this.$emit("update:swipeIndex", index);
-    console.log("old this.swipeIndex", this.swipeIndex);
-    console.log("new index", index);
+    // console.log("old this.swipeIndex", this.swipeIndex);
+    // console.log("new index", index);
     if (this.headerBtnArr[index] && this.headerBtnArr[index].badge) {
       this.headerBtnArr[index].badge = 0;
     }
@@ -130,7 +132,6 @@ export default class Home extends Vue {
   private play(type: string = "pause") {
     const videoListDom: any =
       this.swipeIndex === 1 ? this.videoPlay : this.focusVideoPlay;
-    const focusVideoListDom: any = this.focusVideoPlay;
     videoListDom && videoListDom.playOrPause(type);
   }
 }

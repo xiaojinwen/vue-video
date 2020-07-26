@@ -135,3 +135,32 @@ export const setDivCaretPosition = (element: Element, pos: number) => {
         range.select(); // Select the range (make it the visible selection
     }
 };
+
+
+import { deepClone } from "@/assets/ts/index";
+/**
+ * mock 数组数据的方法
+ * @param obj {Object | Array}
+ * @param len 数据的长度 number
+ */
+export const mockArr = (obj: any, len: number) => {
+    const arr: any[] = [];
+    const type: string = Object.prototype.toString.call(obj);
+    if (type === "[object Array]") {
+        const oldDataLen: number = obj.length;
+        let index: number = 0;
+        while (arr.length < len) {
+            const cloneObj = deepClone(obj[index]);
+            index >= oldDataLen - 1 ? index = 0 : index++;
+            cloneObj.key = arr.length - 1;
+            arr.push(cloneObj);
+        }
+    } else if (type === "[object Object]") {
+        while (arr.length < len) {
+            const cloneObj = deepClone(obj);
+            cloneObj.key = arr.length - 1;
+            arr.push(cloneObj);
+        }
+    }
+    return arr;
+};

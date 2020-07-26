@@ -3,7 +3,9 @@ import App from './App.vue';
 import router from './router';
 import store from './store';
 import './registerServiceWorker';
+import * as filters from '@/filters/index';
 import '@assets/iconfont/iconfont.css';
+import '@assets/scss/global.scss';
 import VConsole from 'vconsole';
 const isDev: boolean = process.env.NODE_ENV !== 'production';
 if (isDev) {
@@ -32,6 +34,10 @@ Vue.use(Tab);
 Vue.use(Tabs);
 Vue.config.productionTip = false;
 
+
+Object.keys(filters).forEach((key: string) => {
+  Vue.filter(key, (filters as any)[key]);
+});
 new Vue({
   router,
   store,

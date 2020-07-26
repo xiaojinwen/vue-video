@@ -1,3 +1,4 @@
+@import '@assets/scss/global.scss';
 .search {
     z-index: 105;
     position: fixed;
@@ -49,5 +50,38 @@
             line-height: 60px;
             text-align: center;
         }
+    }
+    .conjecture {
+        padding-top: 10px;
+        display: flex;
+        flex-wrap: wrap;
+        color: #d6d5d5;
+        font-size: 16px;
+        line-height: 16px;
+        text-align: left;
+        .item {
+            flex: 0 0 50%;
+            padding-top: 8px;
+            padding-bottom: 8px; // line-height: 32px;
+            @include text-ellipsis;
+            .inner-item {
+                padding-left: 10px;
+            }
+            .name {
+                // width: calc(100%-26px);
+                max-width: 150px;
+                display: inline-block;
+                @include text-ellipsis;
+            }
+            .hot {
+                display: inline-block;
+                margin-left: 4px;
+                color: #fff;
+                vertical-align: top;
+            }
+        }
+    }
+    .stars-time-suffix {
+        margin-left: 4px;
     }
 }

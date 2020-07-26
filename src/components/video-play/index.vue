@@ -264,20 +264,6 @@ const isMiui = ua.indexOf("miuibrowser") > -1;
     playProgress: () => import("@/baseComponent/progress/index.vue")
   },
   filters: {
-    number(value: any) {
-      const num = +value;
-      if (num) {
-        if (num >= 100000000) {
-          return Math.round((num / 100000000) * 10) / 10 + "亿";
-        } else if (num >= 10000000) {
-          return Math.round((num / 10000000) * 10) / 10 + "千万";
-        } else if (num >= 10000) {
-          return Math.round((num / 10000) * 10) / 10 + "w";
-        }
-        return num;
-      }
-      return value;
-    },
     durationFormat(value: any) {
       function padStart(val: any) {
         return (Number.parseInt(val, 10) + "").padStart(2, "0");
