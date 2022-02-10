@@ -33,7 +33,7 @@
     "chromedriver": "74",
     "geckodriver": "^1.19.1",
     "lint-staged": "^9.5.0",
-    "node-sass": "^4.12.0",
+    "node-sass": "^7.0.0",
     "sass-loader": "^8.0.2",
     "ts-import-plugin": "^1.6.6",
     "typescript": "~3.8.3",
